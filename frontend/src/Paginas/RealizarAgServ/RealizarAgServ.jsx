@@ -71,7 +71,7 @@ function RealizarAgServ() {
 
   const carregarTiposServicos = async () => {
     try {
-      const tipos = await realizarAgServService.obterTipos();
+      const tipos = await realizarAgServService.obterTodos();
       setTiposServicos(tipos);
     } catch (error) {
       setErro('Erro ao carregar tipos de serviços.');
@@ -237,7 +237,7 @@ function RealizarAgServ() {
                       <Form.Group>
                         <Form.Label>Tipo de Serviço</Form.Label>
                         <CaixaSelecao
-                          enderecoFonteDados="http://localhost:3001/tiposdeservico"
+                          enderecoFonteDados="http://localhost:3001/servico"
                           campoChave="id"
                           campoExibicao="nome"
                           funcaoSelecao={handleSelecaoServico}

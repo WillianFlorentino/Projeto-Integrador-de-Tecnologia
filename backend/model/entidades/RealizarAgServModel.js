@@ -64,7 +64,7 @@ class RealizarAgServModel {
     async obterTodos() {
         const listaAgServ = await database.ExecutaComando(`
             SELECT 
-                realizarAgServ.agserv_id, -- Alterado para o nome correto da coluna
+                realizarAgServ.agserv_id, 
                 realizarAgServ.agserv_nomeSolicitante,
                 realizarAgServ.agserv_cpfSolicitante,
                 realizarAgServ.agserv_contatoSolicitante,
