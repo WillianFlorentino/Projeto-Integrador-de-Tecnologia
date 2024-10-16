@@ -24,14 +24,20 @@ class RealizarAgServService {
                 },
                 body: JSON.stringify(agendamentoDados)
             });
-
+    
             if (!response.ok) {
-                throw new Error('Erro ao adicionar o agendamento');
+                const errorResponse = await response.json();
+                throw new Error(`Erro ao adicionar o agendamento: ${errorResponse.message || 'Erro desconhecido'}`);
             }
+    
+            return await response.json(); // Retorna a resposta do backend em caso de sucesso
         } catch (error) {
-            throw error;
+            console.error(error);
+            throw error; // Propaga o erro para ser tratado pelo chamador
         }
     }
+
+
 
     async atualizar(idAgendamento, agendamentoDados) {
         try {

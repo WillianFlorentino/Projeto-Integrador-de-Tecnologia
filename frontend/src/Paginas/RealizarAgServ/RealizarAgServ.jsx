@@ -15,9 +15,9 @@ const schema = yup.object().shape({
   nomeSolicitante: yup.string().required('O nome do solicitante é obrigatório.').min(3, 'O nome deve ter pelo menos 3 caracteres.'),
   cpfSolicitante: yup.string().required('O CPF é obrigatório.').matches(/^\d{11}$/, 'O CPF deve ter 11 dígitos.'),
   contatoSolicitante: yup.string().required('O contato é obrigatório.').matches(/^\(\d{2}\)\s\d{5}-\d{4}$/, 'O contato deve estar no formato (00) 00000-0000.'),
-  enderecoSolicitante: yup.string().required('O endereço é obrigatório.'),
-  bairroSolicitante: yup.string().required('O bairro é obrigatório.'),
-  numeroSolicitante: yup.string().required('O número é obrigatório.'),
+  endereco: yup.string().required('O endereço é obrigatório.'),
+  bairro: yup.string().required('O bairro é obrigatório.'),
+  numero: yup.string().required('O número é obrigatório.'),
   data: yup.date().required('A data do agendamento é obrigatória.'),
   horario: yup.string().required('O horário é obrigatório.'),
   descricaoServico: yup.string().required('A descrição do serviço é obrigatória.')
@@ -29,9 +29,9 @@ function RealizarAgServ() {
     nomeSolicitante: '',
     cpfSolicitante: '',
     contatoSolicitante: '',
-    enderecoSolicitante: '',
-    bairroSolicitante: '',
-    numeroSolicitante: '',
+    endereco: '',
+    bairro: '',
+    numero: '',
     data: '',
     horario: '',
     descricaoServico: '',
@@ -117,44 +117,50 @@ function RealizarAgServ() {
     const isValid = await validateFields();
 
     if (!isValid) {
-      setErro('Por favor, corrija os erros e tente novamente.');
-      return;
+        setErro('Por favor, corrija os erros e tente novamente.');
+        return;
     }
 
     try {
-      const dados = {
-        ...agendamento,
-        tipoServico: agendamento.tipoServico.id,
-      };
+        const dados = {
+            ...agendamento,
+            tipoServico: agendamento.tipoServico.id,
+        };
 
-      if (!idAgendamento) {
-        await realizarAgServService.adicionar(dados);
-        setSucessoMensagem('Agendamento realizado com sucesso!');
-      } else {
-        await realizarAgServService.atualizar(idAgendamento, dados);
-        setSucessoMensagem('Agendamento atualizado com sucesso!');
-      }
+        if (!idAgendamento) {
+            await realizarAgServService.adicionar(dados);
+            setSucessoMensagem('Agendamento realizado com sucesso!');
+        } else {
+            await realizarAgServService.atualizar(idAgendamento, dados);
+            setSucessoMensagem('Agendamento atualizado com sucesso!');
+        }
 
-      setAgendamento({
-        id: 0,
-        nomeSolicitante: '',
-        cpfSolicitante: '',
-        contatoSolicitante: '',
-        enderecoSolicitante: '',
-        bairroSolicitante: '',
-        numeroSolicitante: '',
-        data: '',
-        horario: '',
-        descricaoServico: '',
-        tipoServico: { id: 0, nome: '' }
-      });
+        // Limpar a mensagem de sucesso após 3 segundos
+        setTimeout(() => {
+            setSucessoMensagem('');
+        }, 3000); // 3000 ms = 3 segundos
 
-      listarAgendamentos();
-      navigate('/Agendamentos');
+        setAgendamento({
+            id: 0,
+            nomeSolicitante: '',
+            cpfSolicitante: '',
+            contatoSolicitante: '',
+            endereco: '',
+            bairro: '',
+            numero: '',
+            data: '',
+            horario: '',
+            descricaoServico: '',
+            tipoServico: { id: 0, nome: '' }
+        });
+
+        listarAgendamentos();
+        navigate('/RealizarAgServ');
     } catch (error) {
-      setErro(`Erro ao salvar o agendamento: ${error.message}`);
+        setErro(`Erro ao salvar o agendamento: ${error.message}`);
     }
-  };
+};
+
 
   const handleExcluir = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir?')) {
@@ -286,14 +292,14 @@ function RealizarAgServ() {
                         <Form.Control
                           className="border-secondary"
                           type="text"
-                          name="enderecoSolicitante"
-                          value={agendamento.enderecoSolicitante}
+                          name="endereco"
+                          value={agendamento.endereco}
                           onChange={handleChange}
-                          isInvalid={!!errors.enderecoSolicitante}
+                          isInvalid={!!errors.endereco}
                           placeholder="Digite o endereço do local do serviço"
                         />
                         <Form.Control.Feedback type="invalid">
-                          {errors.enderecoSolicitante}
+                          {errors.endereco}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
@@ -303,14 +309,14 @@ function RealizarAgServ() {
                         <Form.Control
                           className="border-secondary"
                           type="text"
-                          name="bairroSolicitante"
-                          value={agendamento.bairroSolicitante}
+                          name="bairro"
+                          value={agendamento.bairro}
                           onChange={handleChange}
-                          isInvalid={!!errors.bairroSolicitante}
+                          isInvalid={!!errors.bairro}
                           placeholder="Digite o bairro"
                         />
                         <Form.Control.Feedback type="invalid">
-                          {errors.bairroSolicitante}
+                          {errors.bairro}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
@@ -320,8 +326,8 @@ function RealizarAgServ() {
                         <Form.Control
                           className="border-secondary"
                           type="text"
-                          name="numeroSolicitante"
-                          value={agendamento.numeroSolicitante}
+                          name="numero"
+                          value={agendamento.numero}
                           onChange={handleChange}
                           placeholder="Número"
                         />
@@ -349,61 +355,6 @@ function RealizarAgServ() {
                       </Form.Group>
                     </Col>
                   </Row>
-                  {/* Tabela de Agendamentos */}
-                  <Card className="mt-4">
-                    <Card.Header as="h5">Agendamentos Cadastrados</Card.Header>
-                    <Card.Body>
-                      {listaAgendamentos && listaAgendamentos.length > 0 ? (
-                        <Table striped bordered hover>
-                          <thead>
-                            <tr>
-                              <th>ID</th>
-                              <th>Nome</th>
-                              <th>CPF</th>
-                              <th>Contato</th>
-                              <th>Data</th>
-                              <th>Horário</th>
-                              <th>Serviço</th>
-                              <th>Ações</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {listaAgendamentos.map((agendamento) => (
-                              <tr key={agendamento.agserv_id}>
-                                <td>{agendamento.agserv_id}</td>
-                                <td>{agendamento.agserv_nomeSolicitante}</td>
-                                <td>{agendamento.agserv_cpfSolicitante}</td>
-                                <td>{agendamento.agserv_contatoSolicitante}</td>
-                                <td>{agendamento.agserv_data}</td>
-                                <td>{agendamento.agserv_horario}</td>
-                                <td>{agendamento.tipo_servico.nome}</td>
-                                <td>
-                                  <div className="d-flex">
-                                    <Button
-                                      variant="link"
-                                      onClick={() => navigate(`/editarAgendamento/${agendamento.id}`)}
-                                      className="text-primary fs-5"
-                                    >
-                                      <FaEdit />
-                                    </Button>
-                                    <Button
-                                      variant="link"
-                                      onClick={() => handleExcluir(agendamento.id)}
-                                      className="text-danger fs-5"
-                                    >
-                                      <FaTrash />
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                      ) : (
-                        <div className="text-center">Nenhum agendamento para listar</div>
-                      )}
-                    </Card.Body>
-                  </Card>
                   <Row className="align-items-center d-md-flex justify-content-md-center">
                     <Col lg={2}>
                       <Button variant="success" type="submit" className="w-100">
@@ -422,6 +373,53 @@ function RealizarAgServ() {
                       {erro}
                     </Alert>
                   )}
+                  {/* Tabela de Agendamentos */}
+                  <Card className="mt-4">
+                    <Card.Header as="h5">Agendamentos Cadastrados</Card.Header>
+                    <Card.Body>
+                      {listaAgendamentos && listaAgendamentos.length > 0 ? (
+                        <Table striped bordered hover>
+                          <thead>
+                            <tr>
+                              <th>ID</th>
+                              <th>Nome do Solicitante</th>
+                              <th>Contato</th>
+                              <th>Data Serv.</th>
+                              <th>Horário</th>
+                              <th>Tipo do Serviço</th>
+                              <th>Excluir</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {listaAgendamentos.map((agendamento) => (
+                              <tr key={agendamento.agserv_id}>
+                                <td>{agendamento.agserv_id}</td>
+                                <td>{agendamento.agserv_nomeSolicitante}</td>
+                                <td>{agendamento.agserv_contatoSolicitante}</td>
+                                <td>{format(parseISO(agendamento.agserv_data), 'dd/MM/yyyy')}</td>
+                                <td>{agendamento.agserv_horario}</td>
+                                <td>{agendamento.tipo_servico}</td> {/* Acessando diretamente `tipo_servico` */}
+                                <td>
+                                  <div className="d-flex">
+                                    <Button
+                                      variant="link"
+                                      onClick={() => handleExcluir(agendamento.id)}
+                                      className="text-danger fs-5"
+                                    >
+                                      <FaTrash />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </Table>
+                      ) : (
+                        <div className="text-center">Nenhum agendamento para listar</div>
+                      )}
+                    </Card.Body>
+                  </Card>
+                  
                 </Card.Body>
               </Card>
             </Form>

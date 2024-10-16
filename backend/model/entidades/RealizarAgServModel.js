@@ -14,10 +14,10 @@ class RealizarAgServModel {
     #tipoServico;
     #data;
     #horario;
-    #descricao;
+    #descricaoServico;
 
-    constructor(id = 0, nomeSolicitante = "", cpfSolicitante = "", contatoSolicitante = "", endereco = "", bairro = "", numero = "", tipoServicoId = null, data = null, horario = null, descricao = "") {
-        this.#id = id;  // Certifica-se de que o ID está corretamente atribuído
+    constructor(id = 0, nomeSolicitante = "", cpfSolicitante = "", contatoSolicitante = "", endereco = "", bairro = "", numero = "", tipoServicoId = null, data = null, horario = null, descricaoServico = "") {
+        this.#id = id; 
         this.#nomeSolicitante = nomeSolicitante;
         this.#cpfSolicitante = cpfSolicitante;
         this.#contatoSolicitante = contatoSolicitante;
@@ -26,15 +26,11 @@ class RealizarAgServModel {
         this.#numero = numero;
         this.#data = data;
         this.#horario = horario;
-        this.#descricao = descricao;
-
-        // Carrega o tipo de serviço associado, se o ID for fornecido
-        if (tipoServicoId) {
-            this.#tipoServico = new ServicoModel();
-            this.#tipoServico.id = tipoServicoId;
-        }
+        this.#descricaoServico = descricaoServico;
+    
+        // Apenas definir o tipo de serviço pelo ID
+        this.#tipoServico = tipoServicoId ? { id: tipoServicoId } : null; 
     }
-
     // Getters e Setters para cada atributo
     get id() {
         return this.#id;
@@ -47,69 +43,53 @@ class RealizarAgServModel {
     // Método toJSON para conversão dos dados em um formato serializável
     toJSON() {
         return {
-            nomeSolicitante: this.#nomeSolicitante,
-            cpfSolicitante: this.#cpfSolicitante,
-            contatoSolicitante: this.#contatoSolicitante,
-            endereco: this.#endereco,
-            bairro: this.#bairro,
-            numero: this.#numero,
-            id: this.#tipoServico ? this.#tipoServico.id : null, // Garantir que o ID do tipo de serviço seja usado corretamente
-            data: this.#data,
-            horario: this.#horario,
-            descricao: this.#descricao,
-        };
+            agserv_nomeSolicitante: this.#nomeSolicitante,
+            agserv_cpfSolicitante: this.#cpfSolicitante,
+            agserv_contatoSolicitante: this.#contatoSolicitante,
+            agserv_endereco: this.#endereco,
+            agserv_bairro: this.#bairro,
+            agserv_numero: this.#numero,
+            tipoServicoId: this.#tipoServico ? this.#tipoServico.id : null, // Usando tipoServicoId
+            agserv_data: this.#data,
+            agserv_horario: this.#horario,
+            agserv_descricaoServico: this.#descricaoServico,
+        };
+
     }
 
     // Métodos de CRUD usando database
-    async obterTodos() {
-        const listaAgServ = await database.ExecutaComando(`
-            SELECT 
-                realizarAgServ.agserv_id, 
-                realizarAgServ.agserv_nomeSolicitante,
-                realizarAgServ.agserv_cpfSolicitante,
-                realizarAgServ.agserv_contatoSolicitante,
-                realizarAgServ.agserv_data,
-                realizarAgServ.agserv_horario,
-                realizarAgServ.agserv_descricao,
-                cadastrotiposdeservico.nome AS tipo_servico
-            FROM 
-                realizarAgServ
-            JOIN 
-                cadastrotiposdeservico ON realizarAgServ.agserv_tipoServico_id = cadastrotiposdeservico.id -- Verifique se está correto também
-            ORDER BY 
-                realizarAgServ.agserv_nomeSolicitante ASC
+async adicionar() {
+    const dadosServico = this.toJSON();
+    const query = `
+        INSERT INTO realizaragserv (
+            agserv_nomeSolicitante, 
+            agserv_cpfSolicitante, 
+            agserv_contatoSolicitante, 
+            agserv_endereco, 
+            agserv_bairro, 
+            agserv_numero, 
+            agserv_tipoServico_id, 
+            agserv_data, 
+            agserv_horario, 
+            agserv_descricao
+        ) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const valores = [
+        dadosServico.agserv_nomeSolicitante,
+        dadosServico.agserv_cpfSolicitante,
+        dadosServico.agserv_contatoSolicitante,
+        dadosServico.agserv_endereco,
+        dadosServico.agserv_bairro,
+        dadosServico.agserv_numero,
+        dadosServico.tipoServicoId,
+        dadosServico.agserv_data,
+        dadosServico.agserv_horario,
+        dadosServico.agserv_descricaoServico
+    ];
+    await database.ExecutaComandoNonQuery(query, valores);
+}
 
-        `);
-        return listaAgServ;
-    }
-
-    async obterPorId(id) {
-        const result = await database.ExecutaComando('SELECT * FROM realizarAgServ WHERE id = ?', [id]);
-        return result[0];
-    }
-
-    async adicionar() {
-        const dadosServico = this.toJSON();
-        const query = `
-            INSERT INTO realizarAgServ (
-                agserv_nomeSolicitante, agserv_cpfSolicitante, agserv_contatoSolicitante, agserv_endereco, agserv_bairro, 
-                agserv_numero, agserv_id, agserv_data, agserv_horario, agserv_descricao
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const valores = [
-            dadosServico.agserv_nomeSolicitante, 
-            dadosServico.agserv_cpfSolicitante, 
-            dadosServico.agserv_contatoSolicitante, 
-            dadosServico.agserv_endereco,
-            dadosServico.agserv_bairro, 
-            dadosServico.agserv_numero, 
-            dadosServico.id,
-            dadosServico.agserv_data, 
-            dadosServico.agserv_horario,
-            dadosServico.agserv_descricao
-        ];
-        await database.ExecutaComandoNonQuery(query, valores);
-    }
 
     // Método atualizar ajustado
     async atualizar() {
@@ -150,6 +130,33 @@ class RealizarAgServModel {
         } catch (error) {
             console.error('Erro ao atualizar o serviço:', error);
         }
+    }
+
+    async obterTodos() {
+        const listaAgServ = await database.ExecutaComando(`
+            SELECT 
+                realizarAgServ.agserv_id, 
+                realizarAgServ.agserv_nomeSolicitante,
+                realizarAgServ.agserv_cpfSolicitante,
+                realizarAgServ.agserv_contatoSolicitante,
+                realizarAgServ.agserv_data,
+                realizarAgServ.agserv_horario,
+                realizarAgServ.agserv_descricao,
+                cadastrotiposdeservico.nome AS tipo_servico
+            FROM 
+                realizarAgServ
+            JOIN 
+                cadastrotiposdeservico ON realizarAgServ.agserv_tipoServico_id = cadastrotiposdeservico.id
+            ORDER BY 
+                realizarAgServ.agserv_nomeSolicitante ASC
+
+        `);
+        return listaAgServ;
+    }
+
+    async obterPorId(id) {
+        const result = await database.ExecutaComando('SELECT * FROM realizarAgServ WHERE id = ?', [id]);
+        return result[0];
     }
 
     async excluir() {
