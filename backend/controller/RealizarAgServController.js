@@ -31,20 +31,20 @@ class RealizarAgServController {
 
     async adicionar(req, res) {
         const { 
-            nomeSolicitante, 
-            cpfSolicitante, 
-            contatoSolicitante, 
-            enderecoSolicitante, 
-            bairroSolicitante, 
-            numeroSolicitante, 
+            agserv_nomeSolicitante, 
+            agserv_cpfSolicitante, 
+            agserv_contatoSolicitante, 
+            agserv_enderecoSolicitante, 
+            agserv_bairroSolicitante, 
+            agserv_numeroSolicitante, 
             id, // ID do tipo de serviço
-            dataAgendamento, 
-            horario, 
-            descricaoServico 
+            agserv_data, 
+            agserv_horario, 
+            agserv_descricaoServico 
         } = req.body;
 
         // Verificação de campos obrigatórios
-        if (!nomeSolicitante || !cpfSolicitante || !contatoSolicitante || !enderecoSolicitante || !bairroSolicitante || !numeroSolicitante || !id || !dataAgendamento || !horario || !descricaoServico) {
+        if (!agserv_nomeSolicitante || !agserv_cpfSolicitante || !agserv_contatoSolicitante || !agserv_enderecoSolicitante || !agserv_bairroSolicitante || !agserv_numeroSolicitante || !id || !agserv_data || !agserv_horario || !agserv_descricaoServico) {
             return res.status(400).json({ message: 'Por favor, informe todos os dados do serviço.' });
         }
 
@@ -59,16 +59,16 @@ class RealizarAgServController {
             // Criação do novo serviço agendado
             const atividadeSust = new RealizarAgServModel(
                 0, // ID será gerado automaticamente
-                nomeSolicitante,
-                cpfSolicitante,
-                contatoSolicitante,
-                enderecoSolicitante,
-                bairroSolicitante,
-                numeroSolicitante,
+                agserv_nomeSolicitante,
+                agserv_cpfSolicitante,
+                agserv_contatoSolicitante,
+                agserv_enderecoSolicitante,
+                agserv_bairroSolicitante,
+                agserv_numeroSolicitante,
                 id,
-                dataAgendamento,
-                horario,
-                descricaoServico
+                agserv_data,
+                agserv_horario,
+                agserv_descricaoServico
             );
 
             await atividadeSust.adicionar();
@@ -90,12 +90,12 @@ class RealizarAgServController {
             bairroSolicitante,
             numeroSolicitante,
             tipoServico,
-            dataAgendamento,
+            data,
             horario,
             descricaoServico
         } = req.body;
     
-        if (!nomeSolicitante || !cpfSolicitante || !contatoSolicitante || !enderecoSolicitante || !bairroSolicitante || !numeroSolicitante || !tipoServico || !dataAgendamento || !horario || !descricaoServico) {
+        if (!nomeSolicitante || !cpfSolicitante || !contatoSolicitante || !enderecoSolicitante || !bairroSolicitante || !numeroSolicitante || !tipoServico || !data || !horario || !descricaoServico) {
             return res.status(400).json({ message: 'Por favor, informe todos os dados do serviço.' });
         }
     
@@ -109,7 +109,7 @@ class RealizarAgServController {
                 bairroSolicitante,
                 numeroSolicitante,
                 tipoServico,
-                dataAgendamento,
+                data,
                 horario,
                 descricaoServico
             );

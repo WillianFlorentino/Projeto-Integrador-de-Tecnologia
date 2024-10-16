@@ -18,7 +18,7 @@ const schema = yup.object().shape({
   enderecoSolicitante: yup.string().required('O endereço é obrigatório.'),
   bairroSolicitante: yup.string().required('O bairro é obrigatório.'),
   numeroSolicitante: yup.string().required('O número é obrigatório.'),
-  dataAgendamento: yup.date().required('A data do agendamento é obrigatória.'),
+  data: yup.date().required('A data do agendamento é obrigatória.'),
   horario: yup.string().required('O horário é obrigatório.'),
   descricaoServico: yup.string().required('A descrição do serviço é obrigatória.')
 });
@@ -32,7 +32,7 @@ function RealizarAgServ() {
     enderecoSolicitante: '',
     bairroSolicitante: '',
     numeroSolicitante: '',
-    dataAgendamento: '',
+    data: '',
     horario: '',
     descricaoServico: '',
     tipoServico: { id: 0, nome: '' }
@@ -86,7 +86,7 @@ function RealizarAgServ() {
       const obterAgendamento = async () => {
         try {
           const dados = await realizarAgServService.obterPorId(idAgendamento); // 4
-          dados.dataAgendamento = format(parseISO(dados.dataAgendamento), 'yyyy-MM-dd'); // 5
+          dados.data = format(parseISO(dados.data), 'yyyy-MM-dd'); // 5
           setAgendamento(dados); // 6
         } catch (error) {
           setErro('Erro ao carregar agendamento.'); // 7
@@ -143,7 +143,7 @@ function RealizarAgServ() {
         enderecoSolicitante: '',
         bairroSolicitante: '',
         numeroSolicitante: '',
-        dataAgendamento: '',
+        data: '',
         horario: '',
         descricaoServico: '',
         tipoServico: { id: 0, nome: '' }
@@ -251,13 +251,13 @@ function RealizarAgServ() {
                         <Form.Control
                           className="border-secondary"
                           type="date"
-                          name="dataAgendamento"
-                          value={agendamento.dataAgendamento}
+                          name="data"
+                          value={agendamento.data}
                           onChange={handleChange}
-                          isInvalid={!!errors.dataAgendamento}
+                          isInvalid={!!errors.data}
                         />
                         <Form.Control.Feedback type="invalid">
-                          {errors.dataAgendamento}
+                          {errors.data}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
@@ -349,7 +349,61 @@ function RealizarAgServ() {
                       </Form.Group>
                     </Col>
                   </Row>
-
+                  {/* Tabela de Agendamentos */}
+                  <Card className="mt-4">
+                    <Card.Header as="h5">Agendamentos Cadastrados</Card.Header>
+                    <Card.Body>
+                      {listaAgendamentos && listaAgendamentos.length > 0 ? (
+                        <Table striped bordered hover>
+                          <thead>
+                            <tr>
+                              <th>ID</th>
+                              <th>Nome</th>
+                              <th>CPF</th>
+                              <th>Contato</th>
+                              <th>Data</th>
+                              <th>Horário</th>
+                              <th>Serviço</th>
+                              <th>Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {listaAgendamentos.map((agendamento) => (
+                              <tr key={agendamento.agserv_id}>
+                                <td>{agendamento.agserv_id}</td>
+                                <td>{agendamento.agserv_nomeSolicitante}</td>
+                                <td>{agendamento.agserv_cpfSolicitante}</td>
+                                <td>{agendamento.agserv_contatoSolicitante}</td>
+                                <td>{agendamento.agserv_data}</td>
+                                <td>{agendamento.agserv_horario}</td>
+                                <td>{agendamento.tipo_servico.nome}</td>
+                                <td>
+                                  <div className="d-flex">
+                                    <Button
+                                      variant="link"
+                                      onClick={() => navigate(`/editarAgendamento/${agendamento.id}`)}
+                                      className="text-primary fs-5"
+                                    >
+                                      <FaEdit />
+                                    </Button>
+                                    <Button
+                                      variant="link"
+                                      onClick={() => handleExcluir(agendamento.id)}
+                                      className="text-danger fs-5"
+                                    >
+                                      <FaTrash />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </Table>
+                      ) : (
+                        <div className="text-center">Nenhum agendamento para listar</div>
+                      )}
+                    </Card.Body>
+                  </Card>
                   <Row className="align-items-center d-md-flex justify-content-md-center">
                     <Col lg={2}>
                       <Button variant="success" type="submit" className="w-100">

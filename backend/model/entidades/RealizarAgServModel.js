@@ -92,21 +92,21 @@ class RealizarAgServModel {
         const dadosServico = this.toJSON();
         const query = `
             INSERT INTO realizarAgServ (
-                nomeSolicitante, cpfSolicitante, contatoSolicitante, endereco, bairro, 
-                numero, id, data, horario, descricao
+                agserv_nomeSolicitante, agserv_cpfSolicitante, agserv_contatoSolicitante, agserv_endereco, agserv_bairro, 
+                agserv_numero, agserv_id, agserv_data, agserv_horario, agserv_descricao
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const valores = [
-            dadosServico.nomeSolicitante, 
-            dadosServico.cpfSolicitante, 
-            dadosServico.contatoSolicitante, 
-            dadosServico.endereco,
-            dadosServico.bairro, 
-            dadosServico.numero, 
+            dadosServico.agserv_nomeSolicitante, 
+            dadosServico.agserv_cpfSolicitante, 
+            dadosServico.agserv_contatoSolicitante, 
+            dadosServico.agserv_endereco,
+            dadosServico.agserv_bairro, 
+            dadosServico.agserv_numero, 
             dadosServico.id,
-            dadosServico.data, 
-            dadosServico.horario,
-            dadosServico.descricao
+            dadosServico.agserv_data, 
+            dadosServico.agserv_horario,
+            dadosServico.agserv_descricao
         ];
         await database.ExecutaComandoNonQuery(query, valores);
     }
