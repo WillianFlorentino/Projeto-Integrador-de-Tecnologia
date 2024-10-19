@@ -18,6 +18,7 @@ class RealizarAgServController {
         try {
             const realizarAgServModel = new RealizarAgServModel();
             const listaAgServ = await realizarAgServModel.obterPorId(id);
+            console.log('Dados do agendamento por ID:', listaAgServ); // Log dos dados retornados
             if (listaAgServ) {
                 return res.status(200).json(listaAgServ);
             } else {
@@ -83,9 +84,54 @@ class RealizarAgServController {
         }
     }
 
-    async atualizar(req, res) {
-        const id = req.params.id;
-        const {
+
+
+async excluir(req, res) {
+    const id = parseInt(req.params.id, 10); // Garantir que o ID seja um número
+
+    console.log('ID recebido para exclusão:', id); // Verifique o valor do ID
+
+    if (!id) {
+        return res.status(400).json({ message: 'Por favor, informe o ID do serviço para exclusão.' });
+    }
+
+    try {
+        const listaAgServ = new RealizarAgServModel();
+        listaAgServ.id = id;
+
+        await listaAgServ.excluir();
+
+        return res.status(200).json({ message: 'Serviço excluído com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao excluir serviço:', error);
+        return res.status(500).json({ message: 'Erro ao excluir serviço.' });
+    }
+}
+
+async atualizar(req, res) {
+    const id = req.params.id;
+    const {
+        nomeSolicitante,
+        cpfSolicitante,
+        contatoSolicitante,
+        endereco,
+        bairro,
+        numero,
+        tipoServico,
+        data,
+        horario,
+        descricaoServico
+    } = req.body;
+
+    console.log('Dados recebidos para atualização:', req.body); // Adicionado para debug
+
+    if (!nomeSolicitante || !cpfSolicitante || !contatoSolicitante || !endereco || !bairro || !numero || !tipoServico || !data || !horario || !descricaoServico) {
+        return res.status(400).json({ message: 'Por favor, informe todos os dados do serviço.' });
+    }
+
+    try {
+        const listaAgServ = new RealizarAgServModel(
+            id,
             nomeSolicitante,
             cpfSolicitante,
             contatoSolicitante,
@@ -96,54 +142,15 @@ class RealizarAgServController {
             data,
             horario,
             descricaoServico
-        } = req.body;
-    
-        if (!nomeSolicitante || !cpfSolicitante || !contatoSolicitante || !endereco || !bairro || !numero || !tipoServico || !data || !horario || !descricaoServico) {
-            return res.status(400).json({ message: 'Por favor, informe todos os dados do serviço.' });
-        }
-    
-        try {
-            const listaAgServ = new RealizarAgServModel(
-                id,
-                nomeSolicitante,
-                cpfSolicitante,
-                contatoSolicitante,
-                endereco,
-                bairro,
-                numero,
-                tipoServico,
-                data,
-                horario,
-                descricaoServico
-            );
-    
-            await listaAgServ.atualizar();
-            return res.status(200).json({ message: 'Serviço atualizado com sucesso.' });
-        } catch (error) {
-            console.error('Erro ao atualizar serviço:', error);
-            return res.status(500).json({ message: 'Erro ao atualizar serviço.', error: error.message });
-        }
+        );
+
+        await listaAgServ.atualizar();
+        return res.status(200).json({ message: 'Serviço atualizado com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao atualizar serviço:', error);
+        return res.status(500).json({ message: 'Erro ao atualizar serviço.', error: error.message });
     }
-
-    async excluir(req, res) {
-        const id = req.params.id;
-
-        if (!id) {
-            return res.status(400).json({ message: 'Por favor, informe o ID do serviço para exclusão.' });
-        }
-
-        try {
-            const listaAgServ = new RealizarAgServModel();
-            listaAgServ.id = id;
-
-            await listaAgServ.excluir();
-
-            return res.status(200).json({ message: 'Serviço excluído com sucesso.' });
-        } catch (error) {
-            console.error('Erro ao excluir serviço:', error);
-            return res.status(500).json({ message: 'Erro ao excluir serviço.' });
-        }
-    }
+}
 
     async filtrar(req, res) {
         const termoBusca = req.params.termoBusca || "";

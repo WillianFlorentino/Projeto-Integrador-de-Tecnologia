@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import RealizarAgServService from '../../services/RealizarAgServService.js';
 import CaixaSelecao from '../../Componentes/CaixaSelecaoServicos.jsx';
 import { format, parseISO } from 'date-fns';
+import InputMask from 'react-input-mask';
 
 
 const realizarAgServService = new RealizarAgServService();
@@ -13,7 +14,9 @@ const realizarAgServService = new RealizarAgServService();
 
 const schema = yup.object().shape({
   nomeSolicitante: yup.string().required('O nome do solicitante é obrigatório.').min(3, 'O nome deve ter pelo menos 3 caracteres.'),
-  cpfSolicitante: yup.string().required('O CPF é obrigatório.').matches(/^\d{11}$/, 'O CPF deve ter 11 dígitos.'),
+  cpfSolicitante: yup.string()
+    .required('O CPF é obrigatório.')
+    .matches(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'O CPF deve estar no formato 000.000.000-00.'),
   contatoSolicitante: yup.string().required('O contato é obrigatório.').matches(/^\(\d{2}\)\s\d{5}-\d{4}$/, 'O contato deve estar no formato (00) 00000-0000.'),
   endereco: yup.string().required('O endereço é obrigatório.'),
   bairro: yup.string().required('O bairro é obrigatório.'),
@@ -44,14 +47,17 @@ function RealizarAgServ() {
   const [erro, setErro] = useState('');
   const [errors, setErrors] = useState({});
   const [validated, setValidated] = useState(false);
+  const [idAgendamento, setIdAgendamento] = useState(null);
 
   const navigate = useNavigate();
-  const { idAgendamento } = useParams();
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setAgendamento((prev) => ({ ...prev, [name]: value }));
   };
+
+  
 
   const handleSelecaoServico = (servicoSelecionado) => {
     setAgendamento((prevAgendamento) => ({
@@ -59,6 +65,8 @@ function RealizarAgServ() {
       tipoServico: { id: servicoSelecionado.id, nome: servicoSelecionado.nome }
     }));
   };
+
+
 
   const listarAgendamentos = async () => {
     try {
@@ -69,6 +77,101 @@ function RealizarAgServ() {
     }
   };
 
+  const handleAtualizar = async (event) => {
+    event.preventDefault(); // Evita o comportamento padrão do formulário
+
+    // Valida os campos antes de prosseguir
+    const isValid = await validateFields();
+    if (!isValid) {
+        setErro('Por favor, corrija os erros e tente novamente.');
+        return; // Sai da função se a validação falhar
+    }
+
+    try {
+        const dados = {
+            ...agendamento,
+            tipoServico: agendamento.tipoServico.id, // Mantém apenas o ID do tipo de serviço
+        };
+
+        // Verifica se o idAgendamento está definido
+        if (idAgendamento) {
+            // Atualiza o agendamento existente
+            await realizarAgServService.atualizar(idAgendamento, dados);
+            setSucessoMensagem('Agendamento atualizado com sucesso!');
+        } else {
+            // Se não houver um idAgendamento, exibe um erro
+            setErro('Nenhum agendamento selecionado para atualizar.');
+            return; // Sai da função
+        }
+
+        // Limpa a mensagem de sucesso após 3 segundos
+        setTimeout(() => {
+            setSucessoMensagem('');
+        }, 3000); 
+
+        // Limpa o formulário após a atualização
+        setAgendamento({
+            id: 0,
+            nomeSolicitante: '',
+            cpfSolicitante: '',
+            contatoSolicitante: '',
+            endereco: '',
+            bairro: '',
+            numero: '',
+            data: '',
+            horario: '',
+            descricaoServico: '',
+            tipoServico: { id: 0, nome: '' }
+        });
+
+        // Atualiza a lista de agendamentos
+        listarAgendamentos();
+        // Redireciona para a página de agendamentos
+        navigate('/RealizarAgServ');
+    } catch (error) {
+        // Captura e exibe o erro caso a atualização falhe
+        setErro(`Erro ao atualizar o agendamento: ${error.message}`);
+    }
+};
+
+
+const carregarAgendamentoParaEdicao = (agendamento) => {
+  console.log('Agendamento carregado para edição:', agendamento);
+  setAgendamento({
+      id: agendamento.agserv_id,
+      nomeSolicitante: agendamento.agserv_nomeSolicitante,
+      cpfSolicitante: agendamento.agserv_cpfSolicitante,
+      contatoSolicitante: agendamento.agserv_contatoSolicitante,
+      endereco: agendamento.agserv_endereco,
+      bairro: agendamento.agserv_bairro,
+      numero: agendamento.agserv_numero,
+      data: format(parseISO(agendamento.agserv_data), 'yyyy-MM-dd'),
+      horario: agendamento.agserv_horario,
+      descricaoServico: agendamento.agserv_descricao,
+      tipoServico: { id: agendamento.agserv_tipoServico_id, nome: agendamento.agserv_tipoServico_nome } // Certifique-se que isso está correto
+  });
+  setIdAgendamento(agendamento.agserv_id);
+};
+
+// UseEffect para obter agendamento por id
+// useEffect(() => {
+//   listarAgendamentos();
+//   carregarTiposServicos();
+
+//   if (idAgendamento) {
+//       const obterAgendamento = async () => {
+//           try {
+//               const dados = await realizarAgServService.obterPorId(idAgendamento);
+//               dados.data = format(parseISO(dados.data), 'yyyy-MM-dd');
+//               setAgendamento(dados);
+//           } catch (error) {
+//               setErro('Erro ao carregar agendamento.');
+//           }
+//       };
+//       obterAgendamento();
+//   }
+// }, [idAgendamento])
+
   const carregarTiposServicos = async () => {
     try {
       const tipos = await realizarAgServService.obterTodos();
@@ -78,24 +181,54 @@ function RealizarAgServ() {
     }
   };
 
+  // useEffect(() => {
+  //   listarAgendamentos(); // 1
+  //   carregarTiposServicos(); // 2
+
+  //   if (idAgendamento) { // 3
+  //     const obterAgendamento = async () => {
+  //       try {
+  //         const dados = await realizarAgServService.obterPorId(idAgendamento); // 4
+  //         dados.data = format(parseISO(dados.data), 'yyyy-MM-dd'); // 5
+  //         setAgendamento(dados); // 6
+  //       } catch (error) {
+  //         setErro('Erro ao carregar agendamento.'); // 7
+  //       }
+  //     };
+  //     obterAgendamento();
+  //   }
+  // }, [idAgendamento]); // 8
+
   useEffect(() => {
-    listarAgendamentos(); // 1
-    carregarTiposServicos(); // 2
-
-    if (idAgendamento) { // 3
-      const obterAgendamento = async () => {
-        try {
-          const dados = await realizarAgServService.obterPorId(idAgendamento); // 4
-          dados.data = format(parseISO(dados.data), 'yyyy-MM-dd'); // 5
-          setAgendamento(dados); // 6
-        } catch (error) {
-          setErro('Erro ao carregar agendamento.'); // 7
-        }
-      };
-      obterAgendamento();
+    listarAgendamentos();
+    carregarTiposServicos();
+    
+    if (idAgendamento) {
+        const obterAgendamento = async () => {
+            try {
+                const dados = await realizarAgServService.obterPorId(idAgendamento);
+                console.log('Dados do agendamento:', dados); // Verifique a estrutura dos dados aqui
+                setAgendamento({
+                  id: dados.agserv_id,
+                  nomeSolicitante: dados.agserv_nomeSolicitante,
+                  cpfSolicitante: dados.agserv_cpfSolicitante,
+                  contatoSolicitante: dados.agserv_contatoSolicitante,
+                  endereco: dados.agserv_endereco,
+                  bairro: dados.agserv_bairro,
+                  numero: dados.agserv_numero,
+                  data: format(parseISO(dados.agserv_data), 'yyyy-MM-dd'),
+                  horario: dados.agserv_horario,
+                  descricaoServico: dados.agserv_descricao,
+                  tipoServico: { id: dados.agserv_tipoServico_id, nome: dados.agserv_tipoServico_nome } // Certifique-se que isso está correto
+              });
+            } catch (error) {
+                setErro('Erro ao carregar agendamento.');
+                console.error(error);
+            }
+        };
+        obterAgendamento();
     }
-  }, [idAgendamento]); // 8
-
+  }, [idAgendamento]);
 
   const validateFields = async () => {
     try {
@@ -162,13 +295,22 @@ function RealizarAgServ() {
 };
 
 
-  const handleExcluir = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir?')) {
-      await realizarAgServService.excluir(id);
-      setSucessoMensagem('Agendamento excluído com sucesso!');
-      listarAgendamentos();
-    }
-  };
+const handleExcluir = async (id) => {
+  console.log('ID recebido para exclusão no frontend:', id); 
+
+  if (window.confirm('Tem certeza que deseja excluir?')) {
+      try {
+          await realizarAgServService.excluir(id);
+          setSucessoMensagem('Agendamento excluído com sucesso!');
+          listarAgendamentos();
+      } catch (error) {
+          setErro(`Erro ao excluir o agendamento: ${error.message}`);
+      }
+      setTimeout(() => {
+        setSucessoMensagem('');
+    }, 3000);
+  }
+};
 
   return (
     <div className="bg-white p-0 rounded shadow w-100" style={{ minHeight: '90vh' }}>
@@ -200,39 +342,51 @@ function RealizarAgServ() {
                   </Form.Group>
                 </Col>
                 <Col lg={3}>
-                  <Form.Group>
-                    <Form.Label>CPF</Form.Label>
-                    <Form.Control
-                      className="border-secondary"
-                      type="text"
-                      name="cpfSolicitante"
-                      value={agendamento.cpfSolicitante}
-                      onChange={handleChange}
-                      isInvalid={!!errors.cpfSolicitante}
-                      placeholder="Digite o CPF"
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.cpfSolicitante}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
+            <Form.Group>
+                <Form.Label>CPF</Form.Label>
+                <InputMask
+                    mask="999.999.999-99"
+                    value={agendamento.cpfSolicitante}
+                    onChange={handleChange}
+                >
+                    {() => (
+                        <Form.Control
+                            className="border-secondary"
+                            type="text"
+                            name="cpfSolicitante"
+                            isInvalid={!!errors.cpfSolicitante}
+                            placeholder="Digite o CPF"
+                        />
+                    )}
+                </InputMask>
+                <Form.Control.Feedback type="invalid">
+                    {errors.cpfSolicitante}
+                </Form.Control.Feedback>
+            </Form.Group>
+        </Col>
                 <Col lg={4}>
-                  <Form.Group>
-                    <Form.Label>Contato</Form.Label>
-                    <Form.Control
-                      className="border-secondary"
-                      type="text"
-                      name="contatoSolicitante"
-                      value={agendamento.contatoSolicitante}
-                      onChange={handleChange}
-                      isInvalid={!!errors.contatoSolicitante}
-                      placeholder="(00) 00000-0000"
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.contatoSolicitante}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
+            <Form.Group>
+                <Form.Label>Contato</Form.Label>
+                <InputMask
+                    mask="(99) 99999-9999"
+                    value={agendamento.contatoSolicitante}
+                    onChange={handleChange}
+                >
+                    {() => (
+                        <Form.Control
+                            className="border-secondary"
+                            type="text"
+                            name="contatoSolicitante"
+                            isInvalid={!!errors.contatoSolicitante}
+                            placeholder="(00) 00000-0000"
+                        />
+                    )}
+                </InputMask>
+                <Form.Control.Feedback type="invalid">
+                    {errors.contatoSolicitante}
+                </Form.Control.Feedback>
+            </Form.Group>
+        </Col>
               </Row>
 
               <Card>
@@ -248,6 +402,7 @@ function RealizarAgServ() {
                           campoExibicao="nome"
                           funcaoSelecao={handleSelecaoServico}
                           localLista={tiposServicos}
+                          valorSelecionado={agendamento.tipoServico.id} // Certifique-se de que isso está correto
                         />
                       </Form.Group>
                     </Col>
@@ -360,6 +515,13 @@ function RealizarAgServ() {
                       <Button variant="success" type="submit" className="w-100">
                         <FaSave /> Agendar
                       </Button>
+                      <Button 
+      variant="primary" 
+      onClick={handleAtualizar} 
+      className="w-100 mt-2" // Adiciona uma margem superior para espaçamento
+    >
+      <FaEdit /> Atualizar
+    </Button>
                     </Col>
                   </Row>
 
@@ -403,11 +565,13 @@ function RealizarAgServ() {
                                   <div className="d-flex">
                                     <Button
                                       variant="link"
-                                      onClick={() => handleExcluir(agendamento.id)}
+                                      onClick={() => handleExcluir(agendamento.agserv_id)}
                                       className="text-danger fs-5"
                                     >
                                       <FaTrash />
                                     </Button>
+                                    <Button onClick={() => carregarAgendamentoParaEdicao(agendamento)}>Editar</Button>
+                                    
                                   </div>
                                 </td>
                               </tr>
