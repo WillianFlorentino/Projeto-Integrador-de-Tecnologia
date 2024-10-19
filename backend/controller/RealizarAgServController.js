@@ -108,6 +108,50 @@ async excluir(req, res) {
     }
 }
 
+// async atualizar(req, res) {
+//     const id = req.params.id;
+//     const {
+//         nomeSolicitante,
+//         cpfSolicitante,
+//         contatoSolicitante,
+//         endereco,
+//         bairro,
+//         numero,
+//         tipoServico,
+//         data,
+//         horario,
+//         descricaoServico
+//     } = req.body;
+
+//     console.log('Dados recebidos para atualização:', req.body); // Adicionado para debug
+
+//     if (!nomeSolicitante || !cpfSolicitante || !contatoSolicitante || !endereco || !bairro || !numero || !tipoServico || !data || !horario || !descricaoServico) {
+//         return res.status(400).json({ message: 'Por favor, informe todos os dados do serviço.' });
+//     }
+
+//     try {
+//         const listaAgServ = new RealizarAgServModel(
+//             id,
+//             nomeSolicitante,
+//             cpfSolicitante,
+//             contatoSolicitante,
+//             endereco,
+//             bairro,
+//             numero,
+//             tipoServico,
+//             data,
+//             horario,
+//             descricaoServico
+//         );
+
+//         await listaAgServ.atualizar();
+//         return res.status(200).json({ message: 'Serviço atualizado com sucesso.' });
+//     } catch (error) {
+//         console.error('Erro ao atualizar serviço:', error);
+//         return res.status(500).json({ message: 'Erro ao atualizar serviço.', error: error.message });
+//     }
+// }
+
 async atualizar(req, res) {
     const id = req.params.id;
     const {
@@ -117,7 +161,7 @@ async atualizar(req, res) {
         endereco,
         bairro,
         numero,
-        tipoServico,
+        tipoServico, // Suponho que esse campo seja o ID do tipo de serviço
         data,
         horario,
         descricaoServico
@@ -138,13 +182,13 @@ async atualizar(req, res) {
             endereco,
             bairro,
             numero,
-            tipoServico,
+            tipoServico, // Certifique-se de que esse campo é realmente o ID do tipo de serviço
             data,
             horario,
             descricaoServico
         );
 
-        await listaAgServ.atualizar();
+        await listaAgServ.atualizar(tipoServico); // Passe o tipo de serviço aqui
         return res.status(200).json({ message: 'Serviço atualizado com sucesso.' });
     } catch (error) {
         console.error('Erro ao atualizar serviço:', error);

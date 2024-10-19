@@ -118,8 +118,8 @@ async adicionar() {
             dadosServico.agserv_numero,
             dadosServico.agserv_data,
             dadosServico.agserv_horario,
-            dadosServico.agserv_descricao,
-            tipoServicoId, // Passando o tipoServicoId diretamente
+            dadosServico.agserv_descricaoServico, // Aqui deve ser agserv_descricaoServico
+            tipoServicoId,
             this.#id
         ];
     

@@ -84,8 +84,12 @@ function RealizarAgServ() {
     const isValid = await validateFields();
     if (!isValid) {
         setErro('Por favor, corrija os erros e tente novamente.');
+        setTimeout(() => {
+          setErro(''); // Limpa a mensagem de erro
+      }, 5000);
         return; // Sai da função se a validação falhar
     }
+
 
     try {
         const dados = {
